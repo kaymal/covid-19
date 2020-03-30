@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 
-def get_data(date_="03-20-2020", time_series=True, population=True):
+def get_data(date_="03-20-2020", time_series=True, population=True, new_format=True):
     '''Import and Process Coronovirus, population and stock market data.
     
     Parameters:
@@ -62,9 +62,15 @@ def get_data(date_="03-20-2020", time_series=True, population=True):
     def import_time_series():
         '''Import time series data for the corona cases from JHU'''
         # Read data from JHU GitHub repo
-        confirmed = pd.read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv")
-        deaths = pd.read_csv("https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv")
-        recovered = pd.read_csv("https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv")
+        if new_format:
+            confirmed = pd.read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")
+            deaths = pd.read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv")
+            recovered = pd.read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv")
+
+        else: 
+            confirmed = pd.read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv")
+            deaths = pd.read_csv("https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv")
+            recovered = pd.read_csv("https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv")
         
         # Choose the dates
         dates = confirmed.columns[4:]
@@ -78,13 +84,28 @@ def get_data(date_="03-20-2020", time_series=True, population=True):
 
         recv_df_long = recovered.melt(id_vars=['Province/State', 'Country/Region', 'Lat', 'Long'], 
                                     value_vars=dates, var_name='Date', value_name='Recovered')
+        if  new_format:
+            
+            conf_df_long = conf_df_long.groupby(['Country/Region', 'Date'], as_index=False)['Confirmed'].sum()
+            deaths_df_long = deaths_df_long.groupby(['Country/Region', 'Date'], as_index=False)['Deaths'].sum()
+            recv_df_long = recv_df_long.groupby(['Country/Region', 'Date'], as_index=False)['Recovered'].sum()
+            
+            
+#             # removing canada's recovered values
+#             full_table = full_table[full_table['Province/State'].str.contains('Recovered')!=True]
+
+#             # removing county wise data to avoid double counting
+#             full_table = full_table[full_table['Province/State'].str.contains(',')!=True]
+        
 
         # Create a full table from the confirmed, death and recovered
         full_table = pd.concat([conf_df_long, deaths_df_long['Deaths'], recv_df_long['Recovered']], 
                                axis=1, sort=False)
-        
+
+
+    
         df = full_table.groupby(['Country/Region', 'Date'], as_index=False)[['Confirmed', 'Deaths', 'Recovered']].sum()
-        
+            
         # Replace the names of countries eg. "Mainland China" with "China" (Create a new column)
         df['Country'] = df['Country/Region'].replace(country_dict)
         
