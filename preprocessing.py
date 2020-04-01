@@ -101,8 +101,6 @@ def get_data(date_="03-20-2020", time_series=True, population=True, new_format=T
         # Create a full table from the confirmed, death and recovered
         full_table = pd.concat([conf_df_long, deaths_df_long['Deaths'], recv_df_long['Recovered']], 
                                axis=1, sort=False)
-
-
     
         df = full_table.groupby(['Country/Region', 'Date'], as_index=False)[['Confirmed', 'Deaths', 'Recovered']].sum()
             
