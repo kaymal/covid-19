@@ -1,3 +1,6 @@
-
 .ipynb_checkpoints/
 .DS_Store
+__pycache__/preprocessing.cpython-37.pyc
+data/
+.ipynb_checkpoints/1-data-understanding-checkpoint.ipynb
+.ipynb_checkpoints/1-data-understanding-checkpoint.ipynb
